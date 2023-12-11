@@ -3,11 +3,11 @@ import os
 import pandas as pd
 
 class DatabaseConnector:
-    def __init__(self):
+    def __init__(self, database_name):
         self.host = os.getenv('DB_HOST')
         self.user = os.getenv('DB_USER')
         self.password = os.getenv('DB_PASSWORD')
-        self.database = os.getenv('DB_DATABASE')
+        self.database = database_name
         self.connection = None
 
     def connect(self):
@@ -65,7 +65,7 @@ class DatabaseConnector:
             # convert the list of dictionaries to a Pandas df.
             if result:
                 df = pd.DataFrame(result)
-                df['Date'] = pd.to_datetime(df['Date'])
+                #df['Date'] = pd.to_datetime(df['Date'])
                 return df
             
             else: return None

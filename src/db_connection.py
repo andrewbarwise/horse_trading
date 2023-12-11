@@ -1,0 +1,75 @@
+import mysql.connector
+import os
+import pandas as pd
+
+class DatabaseConnector:
+    def __init__(self):
+        self.host = os.getenv('DB_HOST')
+        self.user = os.getenv('DB_USER')
+        self.password = os.getenv('DB_PASSWORD')
+        self.database = os.getenv('DB_DATABASE')
+        self.connection = None
+
+    def connect(self):
+        try:
+            self.connection = mysql.connector.connect(
+                host=self.host,
+                user=self.user,
+                password=self.password,
+                database=self.database
+            )
+            if self.connection.is_connected():
+                print('Connected to the database')
+        except Exception as e:
+            print(f'Error connecting to the database: {str(e)}')
+
+    def disconnect(self):
+        try:
+            if self.connection.is_connected():
+                self.connection.close()
+                print('Disconnected from the database')
+        except Exception as e:
+            print(f'Error disconnectiong from the database: {str(e)}')
+
+
+    def execute_query(self, query, data=None):
+        if self.connection is None or not self.connection.is_connected():
+            print('Database connection is not established')
+            return None
+
+        try:
+            cursor = self.connection.cursor()
+            if data:
+                cursor.execute(query, data)  # Execute the query with data parameters
+            else:
+                cursor.execute(query)  # Execute the query without data parameters
+            self.connection.commit()
+            cursor.close()
+        except Exception as e:
+            print(f'Error executing the query: {str(e)}')
+
+    def fetch_data(self, query, data = None):
+        if self.connection is None or not self.connection.is_connected():
+            print('Database connection is not established')
+
+        try: 
+            cursor = self.connection.cursor(dictionary=True) # use dictionary cursor
+            if data:
+                cursor.execute(query, data) # execute the query with data parameters
+
+            else:
+                cursor.execute(query) # execute the query without data parameters
+            result = cursor.fetchall() # fetch all rows as a dictionary
+            cursor.close()
+
+            # convert the list of dictionaries to a Pandas df.
+            if result:
+                df = pd.DataFrame(result)
+                df['Date'] = pd.to_datetime(df['Date'])
+                return df
+            
+            else: return None
+
+        except Exception as e:
+            print(f"Error fetching data from the database: {str(e)}")
+            return None

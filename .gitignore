@@ -5,6 +5,10 @@ agreement.docx
 
 .csv
 .xls
+# MLflow related files and directories
+mlruns/
+mlruns.db
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

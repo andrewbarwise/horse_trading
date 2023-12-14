@@ -10,4 +10,16 @@ def eval_classification_model(test_target, predictions):
 
     return accuracy, precision, recall, f1, roc_auc
 
-def print_metrics()
+def print_metrics(accuracy, precision, recall, f1, roc_auc):
+    print(f"Accuracy: {accuracy}")
+    print(f'Precision: {precision}')
+    print(f'Recall: {recall}')
+    print(f'F1 score: {f1}')
+    print(f'ROC AUC score: {roc_auc}')
+
+def eval_print_log(test_target, predictions):
+    accuracy, precision, recall, f1, roc_auc = eval_classification_model(test_target, predictions)
+
+    print_metrics(accuracy, precision, recall, f1, roc_auc)
+
+    log_metrics_to_mlflow(accuracy, precision, recall, f1, roc_auc)

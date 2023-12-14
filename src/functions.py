@@ -35,4 +35,7 @@ def eval_print_log(test_target, predictions):
 
 def get_best_model():
     runs = mlflow.search_runs() # fetch all runs
-    
+    best_run = runs.loc[runs['metrics.roc_auc'].idxmax()]
+
+    best_model_uri = f'runs:/{best_run.run_id}/mlruns'
+    return best_model_uri

@@ -65,7 +65,6 @@ class DatabaseConnector:
             # convert the list of dictionaries to a Pandas df.
             if result:
                 df = pd.DataFrame(result)
-                #df['Date'] = pd.to_datetime(df['Date'])
                 return df
             
             else: return None

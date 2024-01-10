@@ -61,7 +61,7 @@ class Betfair:
             logging.exception(f"Request Exception occurred: {e}")
             return None  # Return None to indicate exception/error
         
-    def list_market_horse(self):
+    def list_market_horse(self, start_time, end_time):
         api_url = 'https://api.betfair.com/betting/json-rpc/v1'  # Adjust the API endpoint as needed
 
         # Construct the request headers with authentication
@@ -80,8 +80,8 @@ class Betfair:
                     "eventTypeIds": ["7"],
                     "marketTypeCodes": ["WIN", "PLACE"],
                     "marketStartTime": {
-                        "from": "2024-01-10T14:55:00Z",
-                        "to": "2024-01-10T23:59:00Z"
+                        "from": start_time,
+                        "to": end_time
                     }
                 },
                 "maxResults": "200",

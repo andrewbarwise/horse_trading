@@ -4,16 +4,29 @@ from datetime import datetime, timedelta
 def date_list():
     tz = pytz.timezone('UTC')
     start_times = []
-    end_times = []
 
     for ii in range(3):
         start_time = datetime.utcnow() + timedelta(days = ii)
         start_time = start_time.replace(hour=0, minute=0, second=0, microsecond=0)
-        start_time = tz.localize(start_time).strftime('%Y-%m-%dT%H:%M:%SZ')
+        formatted_time = tz.localize(start_time).strftime('%Y-%m-%dT%H:%M:%SZ')
 
-        end_time = start_time[:-1] + '23:59:59Z'
+        start_times.append(formatted_time)
 
-        start_times.append(start_time)
-        end_times.append(end_time)
+    return start_times
 
-    return start_times, end_times
+def format_selected_date(selected_date):
+    date_mapping = {
+        '00:00:01': 'T00:00:01Z',
+        '23:59:59': 'T23:59:59Z'
+    }
+
+    if selected_date in date_mapping:
+        current_date = datetime.utcnow().strftime('%Y-%m-%d')
+        time_suffix = date_mapping[selected_date]
+
+        formatted_start_time = f"{current_date}T00:00:01Z"
+        formatted_end_time = f"{current_date}T23:59:59Z"
+
+        return formatted_start_time, formatted_end_time
+    else:
+        return None, None

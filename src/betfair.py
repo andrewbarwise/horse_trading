@@ -1,11 +1,37 @@
 import requests
 import pandas as pd
 import logging
+import streamlit as st
 
 class Betfair:
     def __init__(self, key, code):
         self.betfair_api_key = key
         self.betfair_auth_code = code
+
+    def check_connection(self):
+        
+        api_url = 'https://api.betfair.com/exchange/betting/rest/v1.0/'
+
+        header = {
+            'X-Application': self.betfair_api_key,
+            'X-Authentication': self.betfair_auth_code,
+            'content-type': 'application/json',
+        }
+
+        # Construct a simple JSON request (you can adjust this based on your needs)
+        json_req = '{"filter": {}}'
+
+        # Make a sample request to check the connection
+        url = api_url + 'listEventTypes/'
+        response = requests.post(url, data=json_req, headers=header)
+
+        # Check the status code of the response
+        if response.status_code == 200:
+            st.success("Connection to Betfair successful!")
+        else:
+            st.error(f"Connection failed with status code: {response.status_code}")
+            st.text(response.text)  # Display the error message if any
+
     
     def list_event_types(self):
         endpoint = "https://api.betfair.com/exchange/betting/rest/v1.0/"

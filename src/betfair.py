@@ -1,7 +1,7 @@
 import requests
 import pandas as pd
 import logging
-import streamlit as st
+import streamlit_pages as st
 
 class Betfair:
     def __init__(self, key, code):

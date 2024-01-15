@@ -1,9 +1,9 @@
-import streamlit as st 
-from src.streamlit import *
+import streamlit_pages as st 
+from streamlit_pages import *
 from src.betfair import Betfair
 
 api_key = 'ABGJLOlKaLtTsMIp'
-auth_token = 'OitisoQ8UNLnXWMh4wf5YVSzxDaydKBirnXxIGYca3U='
+auth_token = 'SWahjOHWwjsxOEg+u232YS5eLrnFA8pDeM8J1LTAl70='
 
 # create instance of Betfair class
 bf = Betfair(api_key, auth_token)
@@ -11,6 +11,10 @@ bf = Betfair(api_key, auth_token)
 # check connection
 if st.button('Check Betfair connection'):
     bf.check_connection()
+
+# display account balance
+balance = bf.account_balance()
+st.metric(label = 'Account Balance', value = balance)
 
 dates = date_list()
 

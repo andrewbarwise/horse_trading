@@ -1,41 +1,52 @@
-import pytz
-from datetime import datetime, timedelta
-import streamlit_pages as st
-from streamlit_funcs import *
-from streamlit.hashing import _CodeHasher
+from src.streamlit_funcs import *
+import hashlib
+import streamlit as st
 
 class SessionState:
     def __init__(self, **kwargs):
         # generate a unique key based on the provided kwargs
-        key = _CodeHasher()(*kwargs.values())
-        # store the session state in streamlits internal state
-        self._state = st._get_state(key = key, **kwargs)
+        key = hashlib.sha256(repr(kwargs).encode()).hexdigest()
+        # store the session state in streamlit's session_state
+        st.session_state[key] = kwargs
+        self._key = key
 
-# hard code some dummy values, temp measure
+def hash_password(password):
+    return hashlib.sha256(password.encode()).hexdigest()
+
 valid_username = 'andrew'
-valid_password = 'password'
+valid_password_hash = hash_password('password')  
 
 def login(username, password):
-    return username == valid_username and password == valid_password
+    # Check if the username is valid
+    if username == valid_username:
+        # Hash the entered password for comparison
+        entered_password_hash = hash_password(password)
+        
+        # Compare hashed passwords
+        return entered_password_hash == valid_password_hash
+    
+    return False
 
 def login_page():
     st.title('Login Page')
 
     # get or create a SessionState object
-    session_state = SessionState(logged_in = False)
+    session_state = SessionState(logged_in=False)
 
     # collect user inputs
     username = st.text_input('Username')
-    password = st.text_input('Password', type = 'password')
+    password = st.text_input('Password', type='password')
 
     # check if login button clicked
     if st.button('Login'):
         if login(username, password):
-            session_state.logged_in=True
+            session_state.logged_in = True
             st.success('Login Successful')
 
-            #### ADD REDIRECTION LOGIC HERE
-        
+            # Redirect to another page (change '/dashboard' to the desired path)
+            #st.experimental_rerun()
+            #st.experimental_redirect('/dashboard')
+
         else:
             st.error('Invalid credentials. Please try again.')
 

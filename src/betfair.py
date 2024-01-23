@@ -2,6 +2,7 @@ import requests
 import pandas as pd
 import logging
 import streamlit_pages as st
+import streamlit as st
 
 class Betfair:
     def __init__(self, key, code):
@@ -104,7 +105,7 @@ class Betfair:
             "params": {
                 "filter": {
                     "eventTypeIds": ["7"],
-                    "marketTypeCodes": ["WIN", "PLACE"],
+                    "marketTypeCodes": ["WIN"],  # can add "PLACE";  ["WIN", "PLACE"]
                     "marketStartTime": {
                         "from": start_time,
                         "to": end_time
@@ -144,18 +145,70 @@ class Betfair:
                     # Merge DataFrames on index
                     result_df = pd.concat([df_exploded.drop(columns='runners').reset_index(drop=True), df_normalized.reset_index(drop=True)], axis=1)
                     
-                    # Save DataFrame to CSV
+                    # Save DataFrame to CSV (Optional)
                     result_df.to_csv('test1.csv', index=False)  # Saving the DataFrame to test1.csv
-                    
-                    # Set display options to view the entire DataFrame
-                    pd.set_option('display.max_columns', None)
-                    pd.set_option('display.width', None)
-                    
-                    print(result_df)  # Display the DataFrame with exploded 'runners' columns
+
+                    return result_df
                 else:
                     print("No 'runners' column found in the DataFrame.")
+                    return None
             else:
                 print("No 'result' key found in the response JSON.")
+                return None
         else:
             print(f"Request failed with status code: {response.status_code}")
             print(response.text)  # Display the error message if any
+            return None
+        
+    def get_market_price_data(self, market_id):
+        api_url = 'https://api.betfair.com/betting/json-rpc/v1'  # Adjust the API endpoint as needed
+
+        # Construct the request headers with authentication
+        headers = {
+            'X-Application': self.betfair_api_key,
+            'X-Authentication': self.betfair_auth_code,
+            'Content-Type': 'application/json',
+        }
+
+        # Construct the request payload for price data
+        price_payload = {
+            "jsonrpc": "2.0",
+            "method": "SportsAPING/v1.0/listMarketBook",
+            "params": {
+                "marketIds": [market_id],
+                "priceProjection": {
+                    "priceData": ["EX_BEST_OFFERS"]
+                }
+            },
+            "id": 1
+        }
+
+        # Send the API request for price data
+        response = requests.post(api_url, json=price_payload, headers=headers)
+
+        if response.status_code == 200:
+            price_data = response.json().get('result')
+
+            # Process the price data and extract the first "available to back" data for each runner
+            if price_data:
+                extracted_data = []
+                for runner in price_data[0].get('runners', []):
+                    ex_data = runner.get('ex', {})
+                    available_to_back = ex_data.get('availableToBack', [])
+                    if available_to_back:
+                        first_entry = available_to_back[0]
+                        extracted_data.append({
+                            "marketId": market_id,
+                            "selectionId": runner.get('selectionId'),
+                            "price": first_entry.get('price'),
+                            "size": first_entry.get('size'),
+                            # Add more fields as needed
+                        })
+
+                return extracted_data
+            else:
+                print(f"No price data available for market {market_id}")
+                return None
+        else:
+            print(f"Failed to fetch price data for market {market_id}")
+            return None

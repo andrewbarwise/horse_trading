@@ -33,7 +33,7 @@ else:
 
 
 # Define market_id based on the specific market you want to retrieve price data for
-market_id = '1.224626157'
+market_id = '1.224715808'
 
 # Call the get_market_price_data method
 price_data = bf.get_market_price_data(market_id)

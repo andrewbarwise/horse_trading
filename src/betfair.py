@@ -105,6 +105,7 @@ class Betfair:
             "params": {
                 "filter": {
                     "eventTypeIds": ["7"],
+                    "marketCountries" :["GB"], 
                     "marketTypeCodes": ["WIN"],  # can add "PLACE";  ["WIN", "PLACE"]
                     "marketStartTime": {
                         "from": start_time,
@@ -144,6 +145,9 @@ class Betfair:
                     
                     # Merge DataFrames on index
                     result_df = pd.concat([df_exploded.drop(columns='runners').reset_index(drop=True), df_normalized.reset_index(drop=True)], axis=1)
+                    
+                    # modify the df to bring in the columns we want
+
                     
                     # Save DataFrame to CSV (Optional)
                     result_df.to_csv('test1.csv', index=False)  # Saving the DataFrame to test1.csv

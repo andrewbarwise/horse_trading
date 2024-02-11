@@ -105,7 +105,7 @@ class Betfair:
             "params": {
                 "filter": {
                     "eventTypeIds": ["7"],
-                    "marketCountries" :["GB"], 
+                   # "marketCountries" :["GB"], 
                     "marketTypeCodes": ["WIN"],  # can add "PLACE";  ["WIN", "PLACE"]
                     "marketStartTime": {
                         "from": start_time,
@@ -148,7 +148,7 @@ class Betfair:
                     
                     # modify the df to bring in the columns we want
 
-                    
+
                     # Save DataFrame to CSV (Optional)
                     result_df.to_csv('test1.csv', index=False)  # Saving the DataFrame to test1.csv
 

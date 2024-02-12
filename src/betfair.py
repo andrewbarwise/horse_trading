@@ -216,3 +216,34 @@ class Betfair:
         else:
             print(f"Failed to fetch price data for market {market_id}")
             return None
+        
+    def join_market_and_price(self, start_time, end_time):
+        market_data = self.list_market_horse(start_time, end_time)
+
+        if market_data is not None and not market_data.empty:
+            unique_market_ids = market_data['marketId'].unique().tolist()
+
+            if unique_market_ids:
+                combined_data = []
+
+                for market_id in unique_market_ids:
+                    price_data = self.get_market_price_data(market_id)
+
+                    if price_data is not None:
+                        merged_data = pd.merge(
+                            market_data[market_data['marketId'] == market_id],
+                            pd.DataFrame(price_data),
+                            on = ['marketId', 'selectionId'],
+                            how = 'inner'
+                        )
+
+                        combined_data.append(merged_data)
+
+                if combined_data:
+                    result_df = pd.concat(combined_data, ignore_index=True)
+
+                    result_df.to_csv('market_and_price.csv', index = False)
+
+                    return result_df
+                
+        return None

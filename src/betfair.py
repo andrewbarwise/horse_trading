@@ -105,7 +105,7 @@ class Betfair:
             "params": {
                 "filter": {
                     "eventTypeIds": ["7"],
-                   # "marketCountries" :["GB"], 
+                    "marketCountries" :["GB"], 
                     "marketTypeCodes": ["WIN"],  # can add "PLACE";  ["WIN", "PLACE"]
                     "marketStartTime": {
                         "from": start_time,

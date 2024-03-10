@@ -3,7 +3,7 @@ import streamlit as st
 from src.streamlit_funcs import *
 
 api_key = 'ABGJLOlKaLtTsMIp'
-auth_token = 'gQV2IXL97eox9zjTD83ABpEl8kGHe3+rSOq0Z5ViAeg='
+auth_token = '5EsjrX0bHnagL3FnweBZ3YgEsdwagSwxfxYZPhz72m8='
 
 # create instance of Betfair class
 bf = Betfair(api_key, auth_token)
@@ -36,8 +36,8 @@ else:
 market_id = '1.225749913'
 
 # Call the get_market_price_data method
-price_data = bf.get_market_price_data(market_id)
-#price_data = bf.join_market_and_price(start_time, end_time)
+#price_data = bf.get_market_price_data(market_id)
+price_data = bf.join_market_and_price(start_time, end_time)
 
 
 # Display the price data in Streamlit

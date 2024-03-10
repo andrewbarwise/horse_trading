@@ -145,10 +145,7 @@ class Betfair:
                     
                     # Merge DataFrames on index
                     result_df = pd.concat([df_exploded.drop(columns='runners').reset_index(drop=True), df_normalized.reset_index(drop=True)], axis=1)
-                    
-                    # modify the df to bring in the columns we want
-
-
+                
                     # Save DataFrame to CSV (Optional)
                     result_df.to_csv('test1.csv', index=False)  # Saving the DataFrame to test1.csv
 
@@ -242,7 +239,16 @@ class Betfair:
                 if combined_data:
                     result_df = pd.concat(combined_data, ignore_index=True)
 
-                    result_df.to_csv('market_and_price.csv', index = False)
+                    # Define columns list with unique column names
+                    columns = ['marketId', 'marketName', 'marketStartTime', 'eventType.id',
+                            'eventType.name', 'event.venue', 'selectionId', 'handicap', 'metadata.FORECASTPRICE_DENOMINATOR', 'metadata.WEIGHT_VALUE',
+                            'metadata.OFFICIAL_RATING']
+
+                    # Select specific columns from the concatenated DataFrame
+                    result_df = result_df[columns]
+
+                    # Save the DataFrame to a CSV file
+                    result_df.to_csv('market_and_price.csv', index=False)
 
                     return result_df
                 

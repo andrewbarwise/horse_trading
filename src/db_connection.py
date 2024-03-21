@@ -72,3 +72,14 @@ class DatabaseConnector:
         except Exception as e:
             print(f"Error fetching data from the database: {str(e)}")
             return None
+        
+    def save_data_frame(self, df, table_name):
+        if self.connection is None or not self.connection.is_connected():
+            print('Database connection is not established')
+            return
+
+        try:
+            df.to_sql(name=table_name, con=self.connection, if_exists='replace', index=False)
+            print(f'DataFrame successfully saved and replaced in table {table_name}')
+        except Exception as e:
+            print(f'Error saving DataFrame to table {table_name}: {e}')

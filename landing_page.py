@@ -2,8 +2,8 @@ from src.betfair import Betfair
 import streamlit as st
 from src.streamlit_funcs import *
 
-api_key = 'ABGJLOlKaLtTsMIp'
-auth_token = '5EsjrX0bHnagL3FnweBZ3YgEsdwagSwxfxYZPhz72m8='
+api_key = 'api_key'
+auth_token = 'auth_token'
 
 # create instance of Betfair class
 bf = Betfair(api_key, auth_token)

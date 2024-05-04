@@ -40,18 +40,4 @@ def get_best_model():
     best_model_uri = f'runs:/{best_run.run_id}/mlruns'
     return best_model_uri
 
-def split_data(data, column_name, test_size = 0.2):
 
-    unique_ids = data[column_name]
-
-    # determine the number of samples for the test set based on test size
-    test_samples = int(len(unique_ids.unique()) * test_size)
-
-    # split the unique identifiers into training and test sets
-    test_unique_ids = unique_ids.unique()[:test_samples]
-    train_unique_ids = unique_ids.unique()[test_samples:]
-
-    train_data = data[data[column_name].isin(train_unique_ids)]
-    test_data = data[data[column_name].isin(test_unique_ids)]
-
-    return train_data, test_data

@@ -83,13 +83,10 @@ class DatabaseConnector:
             if dtype_map:
                 df = df.astype(dtype_map)
 
-            # Use the provided cursor if available
-            if cursor:
-                df.to_sql(name=table_name, con=self.connection, if_exists=if_exists, index=False, cursor=cursor)
-            else:
-                # If no cursor provided, create and close one within the method
-                with self.connection.cursor() as cursor:
-                    df.to_sql(name=table_name, con=self.connection, if_exists=if_exists, index=False, cursor=cursor)
+            # Use the to_sql method to save the DataFrame to the database table
+            df.to_sql(name=table_name, con=self.connection, if_exists=if_exists, index=False, dtype=dtype_map)
+
+            print(f'DataFrame successfully saved to table {table_name}')
 
         except Exception as e:
             print(f'Error saving DataFrame to table {table_name}: {e}')

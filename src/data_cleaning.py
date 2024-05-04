@@ -37,6 +37,9 @@ class DataCleaning:
         Returns:
         pandas.Dataframe: training df
         pandas.DataFrame: test df
+
+        Example Usage:
+        train_data, test_data = DataCleaning.split_data(df = df)
         """
         grouped = df.groupby([date_col, course_col])
         train_indices, test_indices = [], []

@@ -1,4 +1,4 @@
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score, roc_curve
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score, confusion_matrix
 import mlflow
 
 def log_metrics_to_mlflow(accuracy, precision, recall, f1, roc_auc):
@@ -16,10 +16,16 @@ def eval_classification_model(test_target, predictions):
     recall = recall_score(test_target, predictions)
     f1 = f1_score(test_target, predictions)
     roc_auc = roc_auc_score(test_target, predictions)
+    conf_matrix = confusion_matrix(test_target, predictions)
+    # [[True Negatives, False Positives], 
+    #    [False Negatives, True Positives]]
 
-    return accuracy, precision, recall, f1, roc_auc
+    return accuracy, precision, recall, f1, roc_auc, conf_matrix
 
-def print_metrics(accuracy, precision, recall, f1, roc_auc):
+def print_metrics(test_target, predictions):
+    accuracy, precision, recall, f1, roc_auc, conf_matrix = eval_classification_model(test_target, predictions)
+    
+    print(f"\nConfusion Matrix: \n{conf_matrix}")
     print(f"Accuracy: {accuracy}")
     print(f'Precision: {precision}')
     print(f'Recall: {recall}')

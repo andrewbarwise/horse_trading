@@ -23,35 +23,44 @@ class DataCleaning:
         return df_replaced
     
     @staticmethod
-    def split_data(df, date_col='Race Time', course_col = 'Course', test_size = 0.2):
+    def split_data(df, date_col='Race Time', course_col='Course', test_size=0.2):
         """
-        Split a dataframe whilst ensuring no leakage between races
+        Split a dataframe whilst ensuring no leakage between races.
 
         Parameters:
-        df (pd.DataFrame): input df
-        date_col (string): column name
-        course_col (string): column name
-        test_size (float): proportion to be used for the test df
+        df (pd.DataFrame): input dataframe
+        date_col (str): column name for the date of the race
+        course_col (str): column name for the course
+        test_size (float): proportion to be used for the test dataframe
 
         Returns:
-        pandas.Dataframe: training df
-        pandas.DataFrame: test df
+        tuple: training dataframe, test dataframe
 
         Example Usage:
-        train_data, test_data = DataCleaning.split_data(df = df)
+        train_data, test_data = split_data(df=df)
         """
-        grouped = df.groupby([date_col, course_col])
-        train_indices, test_indices = [], []
-
-        for _, group in grouped:
-            train_idx, test_idx = train_test_split(group.index, test_size=test_size, shuffle=False)
-            train_indices.extend(train_idx)
-            test_indices.extend(test_idx)
-
-        train_data = df.loc[train_indices]
-        test_data = df.loc[test_indices]
-
+        # Create a unique identifier for each race
+        df['race_id'] = df[date_col].astype(str) + '_' + df[course_col].astype(str)
+        
+        # Get unique races
+        unique_races = df['race_id'].unique()
+        
+        # Split the races into train and test sets
+        train_races, test_races = train_test_split(unique_races, test_size=test_size, shuffle=True, random_state=42)
+        
+        # Split the dataframe based on the race ids
+        train_data = df[df['race_id'].isin(train_races)]
+        test_data = df[df['race_id'].isin(test_races)]
+        
+        # Drop the temporary 'race_id' column
+        train_data = train_data.drop(columns=['race_id'])
+        test_data = test_data.drop(columns=['race_id'])
+        
         return train_data, test_data
+
+    # Example usage
+    # Assuming `df` is your dataframe
+    # train_data, test_data = split_data(df=df)
 
     @staticmethod
     def normalize_columns(df, column_names):

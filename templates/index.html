@@ -1,22 +1,23 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"
-    </head>
-    <body>
-        <h1>Predict Horse Race Winner</h1>
-        <form action="/predict" method="post" enctype="multipart/form-data">
-            <input type="file" name="file">
-            <button type="submit">Upload and Predict</button>
-        </form>
-        {% if prediction %}
-        <h2>Prediction Results:</h2>
-        <ul>
-            {% for result in prediction %}
-            <li>{{ result }}</li>
-            {% endfor %}
-        </ul>
-        { % endif %}
-    </body>
+  <head>
+    <meta charset="utf-8">
+    <title>Horse Race Prediction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  </head>
+  <body>
+    <h1>Predict Horse Race Winner</h1>
+    <form action="/predict" method="post" enctype="multipart/form-data">
+      <input type="file" name="file">
+      <button type="submit">Upload and Predict</button>
+    </form>
+    {% if prediction %}
+    <h2>Prediction Results:</h2>
+    <ul>
+      {% for result in prediction %}
+      <li>{{ result }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </body>
 </html>

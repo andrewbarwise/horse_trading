@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Horse Race Prediction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
     <h1>Horse Race Prediction</h1>
@@ -14,13 +15,13 @@
         <button type="submit">Predict</button>
     </form>
 
-    {% if prediction %}
-        <h2>Predictions:</h2>
-        <ul>
-            {% for pred in prediction %}
-                <li>{{ pred }}</li>
-            {% endfor %}
-        </ul>
+    {% if uploaded_file %}
+        <h2>Uploaded File: {{ uploaded_file }}</h2>
+    {% endif %}
+
+    {% if dataframe %}
+        <h2>CSV Data with Predictions:</h2>
+        {{ dataframe | safe }}
         <button onclick="refreshPage()">Clear Predictions</button>
     {% endif %}
 

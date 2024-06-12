@@ -4,6 +4,8 @@ import numpy as np
 import pandas as pd
 import os
 
+from src.data_cleaning import DataCleaning
+
 app = Flask(__name__)
 UPLOAD_FOLDER = 'uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -28,15 +30,17 @@ if not hasattr(model, 'predict'):
 
 @app.route('/')
 def home():
-    return render_template('index.html', prediction=None)
+    return render_template('index.html', prediction=None, dataframe=None)
 
 @app.route('/predict', methods=['POST'])
 def predict():
     if 'file' not in request.files:
         return "No file part"
+    
     file = request.files['file']
     if file.filename == '':
         return "No selected file"
+    
     if file:
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
         
@@ -51,8 +55,14 @@ def predict():
         # Debugging statement to print the data
         print(f"Data from CSV:\n{data.head()}")
 
-        # Assuming the DataFrame contains the necessary features
-        features = data.values
+        data = DataCleaning.normalize_columns(data, ['SP Odds Decimal', 'weight', 
+           'Proform Speed Rating', 'Won P/L Before', 'evening_morning_price'])
+
+        # Drop columns not needed for predictions
+        
+        features = data[['SP Odds Decimal', 'weight', 
+           'Proform Speed Rating', 'Won P/L Before', 'evening_morning_price']].values
+
         
         # Debugging statement to print the features
         print(f"Features for prediction:\n{features}")
@@ -60,9 +70,14 @@ def predict():
         # Make predictions
         predictions = model.predict(features)
         
-        # Convert predictions to a list to render in HTML
-        predictions = predictions.tolist()
-        return render_template('index.html', prediction=predictions)
+        # Add predictions to the DataFrame
+        data['Predictions'] = predictions
+        
+        # Convert DataFrame to HTML
+        df_html = data.to_html(classes='data', header="true", index=False)
+
+        return render_template('index.html', prediction=predictions, dataframe=df_html)
 
 if __name__ == '__main__':
     app.run(debug=True)
+

@@ -51,16 +51,16 @@ def predict():
         
         # Read the CSV file into a DataFrame
         data = pd.read_csv(filepath)
-        
+
         # Debugging statement to print the data
         print(f"Data from CSV:\n{data.head()}")
 
-        data = DataCleaning.normalize_columns(data, ['SP Odds Decimal', 'weight', 
+        data1 = DataCleaning.normalize_columns(data, ['SP Odds Decimal', 'weight', 
            'Proform Speed Rating', 'Won P/L Before', 'evening_morning_price'])
 
         # Drop columns not needed for predictions
         
-        features = data[['SP Odds Decimal', 'weight', 
+        features = data1[['SP Odds Decimal', 'weight', 
            'Proform Speed Rating', 'Won P/L Before', 'evening_morning_price']].values
 
         
@@ -73,6 +73,11 @@ def predict():
         # Add predictions to the DataFrame
         data['Predictions'] = predictions
         
+        # Select columns to display
+        data = data[['Race Time', 'Course', 'Horse', 'Distance (y)','SP Odds Decimal', 'weight', 
+           'Proform Speed Rating', 'Won P/L Before', 'Predictions']]
+
+    
         # Convert DataFrame to HTML
         df_html = data.to_html(classes='data', header="true", index=False)
 

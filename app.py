@@ -30,7 +30,7 @@ if not hasattr(model, 'predict'):
 
 @app.route('/')
 def home():
-    return render_template('index.html', prediction=None, dataframe=None)
+    return render_template('index.html', races=[], race_data={})
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -55,34 +55,33 @@ def predict():
         # Debugging statement to print the data
         print(f"Data from CSV:\n{data.head()}")
 
+        # Extract unique races
+        races = data['Race Time'].unique().tolist()
+
+        # Normalize columns using DataCleaning module
         data1 = DataCleaning.normalize_columns(data, ['SP Odds Decimal', 'weight', 
            'Proform Speed Rating', 'Won P/L Before', 'evening_morning_price'])
-
-        # Drop columns not needed for predictions
         
-        features = data1[['SP Odds Decimal', 'weight', 
-           'Proform Speed Rating', 'Won P/L Before', 'evening_morning_price']].values
+        # Create a dictionary to store DataFrame HTML for each race
+        race_data = {}
 
+        for race in races:
+            race_df = data1[data1['Race Time'] == race].copy()
+            
+            # Drop columns not needed for prediction
+            features = race_df[['SP Odds Decimal', 'weight', 
+                    'Proform Speed Rating', 'Won P/L Before', 'evening_morning_price']].values
+            
+            # Make predictions
+            predictions = model.predict(features)
+            
+            # Add predictions to the DataFrame
+            race_df['Predictions'] = predictions
+            race_data[race] = race_df.to_html(classes='data', header="true", index=False)
         
-        # Debugging statement to print the features
-        print(f"Features for prediction:\n{features}")
-
-        # Make predictions
-        predictions = model.predict(features)
-        
-        # Add predictions to the DataFrame
-        data['Predictions'] = predictions
-        
-        # Select columns to display
-        data = data[['Race Time', 'Course', 'Horse', 'Distance (y)','SP Odds Decimal', 'weight', 
-           'Proform Speed Rating', 'Won P/L Before', 'Predictions']]
-
-    
-        # Convert DataFrame to HTML
-        df_html = data.to_html(classes='data', header="true", index=False)
-
-        return render_template('index.html', prediction=predictions, dataframe=df_html)
+        # Ensure selected_race is valid
+        selected_race = races[0] if races else None
+        return render_template('index.html', races=races, race_data=race_data, selected_race=selected_race)
 
 if __name__ == '__main__':
     app.run(debug=True)
-

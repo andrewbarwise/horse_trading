@@ -15,17 +15,28 @@
         <button type="submit">Predict</button>
     </form>
 
-    {% if uploaded_file %}
-        <h2>Uploaded File: {{ uploaded_file }}</h2>
+    {% if races %}
+        <h2>Select a Race:</h2>
+        <select id="raceSelect" onchange="updateRace()">
+            {% for race in races %}
+                <option value="{{ race }}" {% if race == selected_race %}selected{% endif %}>{{ race }}</option>
+            {% endfor %}
+        </select>
     {% endif %}
 
-    {% if dataframe %}
-        <h2>CSV Data with Predictions:</h2>
-        {{ dataframe | safe }}
-        <button onclick="refreshPage()">Clear Predictions</button>
-    {% endif %}
+    <div id="raceData">
+        {% if race_data and selected_race %}
+            {{ race_data[selected_race] | safe }}
+        {% endif %}
+    </div>
 
     <script>
+        function updateRace() {
+            var selectedRace = document.getElementById("raceSelect").value;
+            var raceData = {{ race_data | tojson | safe }};
+            document.getElementById("raceData").innerHTML = raceData[selectedRace];
+        }
+        
         function refreshPage() {
             window.location.href = '/';
         }

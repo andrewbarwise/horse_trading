@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+
+{% block title %}Landing Page{% endblock %}
+
+{% block content %}
+    <h1>Welcome to Horse Race Prediction</h1>
+    <img src="{{ url_for('static', filename='images/cover_photo.jpg') }}" class="img-fluid" alt="Racing Horse">
+{% endblock %}

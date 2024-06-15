@@ -29,8 +29,12 @@ if not hasattr(model, 'predict'):
     raise AttributeError(f"Loaded object is not a model with a predict method. Loaded object type: {type(model)}")
 
 @app.route('/')
-def home():
-    return render_template('index.html', races=[], race_data={})
+def landing():
+    return render_template('landing.html')
+
+@app.route('/predict_page')
+def predict_page():
+    return render_template('index.html', races=[], race_data={}, selected_race=None)
 
 @app.route('/predict', methods=['POST'])
 def predict():

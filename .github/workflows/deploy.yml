@@ -40,8 +40,8 @@ jobs:
         platforms: linux/amd64,linux/arm64
         push: true
         tags: |
-          user/app:latest
-          user/app:1.0.0
+          andrewbarwise/app:latest
+          andrewbarwise/app:1.0.0
 
     - name: Deploy to Heroku
       run: |
@@ -52,4 +52,3 @@ jobs:
         docker push registry.heroku.com/${{ secrets.HEROKU_APP_NAME }}/web
         heroku container:release web --app $HEROKU_APP_NAME
 
-        

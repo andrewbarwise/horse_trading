@@ -1,15 +1,16 @@
 FROM python:3.11
 
-WORKDIR /app
+WORKDIR /horse_trading
 
-# copy the requirements file
-COPY requirements.txt /app
+# Copy the requirements file
+COPY horse_trading/requirements.txt /horse_trading
 
-# install the dependencies
+# Install the dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# copy the rest of the application code
-COPY . /app
+# Copy the rest of the application code
+COPY horse_trading /horse_trading
 
-# command to run the application
+# Command to run the application
 CMD ["python", "app.py"]
+

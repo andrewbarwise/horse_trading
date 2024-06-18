@@ -10,6 +10,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Print environment variables for debugging
+      run: |
+        echo "DOCKER_HUB_USERNAME=${{ secrets.DOCKER_HUB_USERNAME }}"
+        echo "DOCKER_HUB_PASSWORD=${{ secrets.DOCKER_HUB_PASSWORD }}"
+        echo "HEROKU_API_KEY=${{ secrets.HEROKU_API_KEY }}"
+        echo "HEROKU_APP_NAME=${{ secrets.HEROKU_APP_NAME }}"
+      env:
+        DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+        DOCKER_HUB_PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
+        HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+        HEROKU_APP_NAME: ${{ secrets.HEROKU_APP_NAME }}
+
     - name: Checkout code
       uses: actions/checkout@v4
 

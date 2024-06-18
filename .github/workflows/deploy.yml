@@ -36,7 +36,7 @@ jobs:
 
     - name: Build and push Docker image
       run: |
-        docker buildx build --platform linux/amd64 --push -t ${{ secrets.DOCKER_HUB_USERNAME }}/my-app:latest .
+        docker buildx build --platform linux/amd64 --push -t ${{ secrets.DOCKER_HUB_USERNAME }}/horse:latest .
 
     - name: Deploy to Heroku
       env:
@@ -50,4 +50,3 @@ jobs:
         docker push registry.heroku.com/${{ secrets.HEROKU_APP_NAME }}/web
         heroku container:release web --app $HEROKU_APP_NAME
 
-        

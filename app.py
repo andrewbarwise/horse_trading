@@ -79,6 +79,8 @@ def load_user(user_id):
 
 @app.route('/')
 def landing():
+    if current_user.is_authenticated:
+        return redirect(url_for('predict_page'))
     return render_template('landing.html')
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -92,7 +94,7 @@ def login():
             if user.is_admin:
                 return redirect(url_for('admin.index'))
             return redirect(url_for('predict_page'))
-    return render_template('login.html')
+    return render_template('landing.html')
 
 @app.route('/logout', methods=['POST'])
 @login_required

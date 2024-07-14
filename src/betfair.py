@@ -1,37 +1,35 @@
 import requests
 import pandas as pd
 import logging
-import streamlit_pages as st
-import streamlit as st
+
 
 class Betfair:
-    def __init__(self, key, code):
-        self.betfair_api_key = key
-        self.betfair_auth_code = code
+    def __init__(self, api_key, auth_code):
+        self.api_key = api_key
+        self.auth_code = auth_code
+        self.base_url = "https://api.betfair.com/exchange/account/json-rpc/v1"
+        self.session = requests.Session()
+        self.session.headers.update({
+            'X-Application': self.api_key,
+            'X-Authentication': self.auth_code,
+            'Content-Type': 'application/json'
+        })
 
     def check_connection(self):
-        
-        api_url = 'https://api.betfair.com/exchange/betting/rest/v1.0/'
+        response = self.session.post(
+            self.base_url,
+            json={"jsonrpc": "2.0", "method": "AccountAPING/v1.0.getAccountFunds", "params": {}, "id": 1}
+        )
+        if response.status_code != 200 or 'error' in response.json():
+            raise Exception("Failed to connect to Betfair. Please check your API key and authentication code.")
 
-        header = {
-            'X-Application': self.betfair_api_key,
-            'X-Authentication': self.betfair_auth_code,
-            'content-type': 'application/json',
-        }
-
-        # Construct a simple JSON request (you can adjust this based on your needs)
-        json_req = '{"filter": {}}'
-
-        # Make a sample request to check the connection
-        url = api_url + 'listEventTypes/'
-        response = requests.post(url, data=json_req, headers=header)
-
-        # Check the status code of the response
-        if response.status_code == 200:
-            st.success("Connection to Betfair successful!")
-        else:
-            st.error(f"Connection failed with status code: {response.status_code}")
-            st.text(response.text)  # Display the error message if any
+    def account_balance(self):
+        response = self.session.post(
+            self.base_url,
+            json={"jsonrpc": "2.0", "method": "AccountAPING/v1.0.getAccountFunds", "params": {}, "id": 1}
+        )
+        result = response.json().get('result', {})
+        return result.get('availableToBetBalance', 0)  
 
     
     def list_event_types(self):
@@ -58,7 +56,7 @@ class Betfair:
             print(f"Failed to retrieve data. Status code: {response.status_code}")
             return pd.DataFrame()  # Return an empty DataFrame on failure
         
-    def account_balance(self):
+    '''def account_balance(self):
         account_balance_url = 'https://api.betfair.com/exchange/account/json-rpc/v1'
 
         headers = {
@@ -86,7 +84,7 @@ class Betfair:
 
         except requests.RequestException as e:
             logging.exception(f"Request Exception occurred: {e}")
-            return None  # Return None to indicate exception/error
+            return None  # Return None to indicate exception/error'''
         
     def list_market_horse(self, start_time, end_time):
         api_url = 'https://api.betfair.com/betting/json-rpc/v1'  # Adjust the API endpoint as needed

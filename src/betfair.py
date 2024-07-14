@@ -1,8 +1,7 @@
 import requests
 import pandas as pd
 import logging
-import streamlit_pages as st
-import streamlit as st
+
 
 class Betfair:
     def __init__(self, key, code):
@@ -26,12 +25,7 @@ class Betfair:
         url = api_url + 'listEventTypes/'
         response = requests.post(url, data=json_req, headers=header)
 
-        # Check the status code of the response
-        if response.status_code == 200:
-            st.success("Connection to Betfair successful!")
-        else:
-            st.error(f"Connection failed with status code: {response.status_code}")
-            st.text(response.text)  # Display the error message if any
+      
 
     
     def list_event_types(self):

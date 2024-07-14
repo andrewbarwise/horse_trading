@@ -18,10 +18,18 @@
                 <li class="nav-item">
                     <a class="nav-link" href="/predict_page">Predict</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/betfair">Betfair</a>
+                </li>
             </ul>
-            <form class="form-inline my-2 my-lg-0" method="POST" action="{{ url_for('logout') }}">
-                <button class="btn btn-outline-danger my-2 my-sm-0" type="submit">Logout</button>
-            </form>
+            {% if current_user.is_authenticated %}
+                {% if balance is not none %}
+                    <span class="navbar-text mr-3">Balance: {{ balance }}</span>
+                {% endif %}
+                <form class="form-inline my-2 my-lg-0" method="POST" action="{{ url_for('logout') }}">
+                    <button class="btn btn-outline-danger my-2 my-sm-0" type="submit">Logout</button>
+                </form>
+            {% endif %}
         </div>
     </nav>
     <div class="container mt-4">

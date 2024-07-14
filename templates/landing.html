@@ -1,24 +1,14 @@
 {% extends "base.html" %}
 
-{% block title %}Landing Page{% endblock %}
+{% block title %}Login Page{% endblock %}
 
 {% block content %}
-    <h1>Welcome to Horse Race Prediction</h1>
-    <img src="{{ url_for('static', filename='images/cover_photo.jpg') }}" class="img-fluid" alt="Racing Horse">
-
-    {% if current_user.is_authenticated %}
-        <h2>Welcome, {{ current_user.username }}</h2>
-        <form method="POST" action="{{ url_for('logout') }}">
-            <input type="submit" value="Logout">
-        </form>
-    {% else %}
-        <h2>Login</h2>
-        <form method="POST" action="{{ url_for('login') }}">
-            <label for="username">Username:</label><br>
-            <input type="text" id="username" name="username"><br>
-            <label for="password">Password:</label><br>
-            <input type="password" id="password" name="password"><br><br>
-            <input type="submit" value="Login">
-        </form>
-    {% endif %}
+    <h1>Login to Horse Race Prediction</h1>
+    <form method="POST" action="{{ url_for('login') }}">
+        <label for="username">Username:</label><br>
+        <input type="text" id="username" name="username"><br>
+        <label for="password">Password:</label><br>
+        <input type="password" id="password" name="password"><br><br>
+        <input type="submit" value="Login">
+    </form>
 {% endblock %}

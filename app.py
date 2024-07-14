@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, redirect, url_for
+from flask import Flask, request, render_template, redirect, url_for, flash, session
 from flask_admin import Admin, AdminIndexView, expose
 from flask_admin.contrib.sqla import ModelView
 from flask_sqlalchemy import SQLAlchemy
@@ -11,6 +11,7 @@ import os
 import secrets
 
 from src.data_cleaning import DataCleaning
+from src.betfair import Betfair
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = secrets.token_hex(16)
@@ -77,9 +78,37 @@ admin.add_view(UserAdmin(User, db.session))
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+@app.context_processor
+def inject_balance():
+    balance = session.get('balance')
+    return dict(balance=balance)
+
 @app.route('/')
 def landing():
+    if current_user.is_authenticated:
+        return redirect(url_for('predict_page'))
     return render_template('landing.html')
+
+@app.route('/betfair')
+@login_required
+def betfair():
+    return render_template('betfair.html')
+
+@app.route('/betfair/check', methods=['POST'])
+@login_required
+def betfair_check():
+    api_key = request.form.get('api_key')
+    auth_code = request.form.get('auth_code')
+    betfair = Betfair(api_key, auth_code)
+
+    try:
+        betfair.check_connection()
+        session['api_key'] = api_key
+        session['auth_code'] = auth_code
+        flash('Connection to Betfair Successful')
+    except Exception as e:
+        flash(f'Connection failed: {e}')
+    return redirect(url_for('betfair'))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -87,23 +116,32 @@ def login():
         username = request.form.get('username')
         password = request.form.get('password')
         user = User.query.filter_by(username=username).first()
+
         if user and check_password_hash(user.password, password):
             login_user(user)
+
+            if 'api_key' in session and 'auth_key' in session:
+                betfair = Betfair(session['api_key'], session['auth_code'])
+                balance = betfair.account_balance()
+                session['balance'] = balance
+
             if user.is_admin:
                 return redirect(url_for('admin.index'))
             return redirect(url_for('predict_page'))
-    return render_template('login.html')
+    return render_template('landing.html')
 
 @app.route('/logout', methods=['POST'])
 @login_required
 def logout():
     logout_user()
+    session.pop('balance', None) # clear the balance from the session
     return redirect(url_for('landing'))
 
 @app.route('/predict_page')
 @login_required
 def predict_page():
-    return render_template('index.html', races=[], race_data={}, selected_race=None)
+    balance = session.get('balance')
+    return render_template('index.html', balance=balance, races=[], race_data={}, selected_race=None)
 
 @app.route('/predict', methods=['POST'])
 @login_required
@@ -155,7 +193,8 @@ def predict():
         
         # Ensure selected_race is valid
         selected_race = races[0] if races else None
-        return render_template('index.html', races=races, race_data=race_data, selected_race=selected_race)
+        balance = session.get('balance')
+        return render_template('index.html', balance = balance, races=races, race_data=race_data, selected_race=selected_race)
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

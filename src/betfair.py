@@ -2,7 +2,6 @@ import requests
 import pandas as pd
 import logging
 
-
 class Betfair:
     def __init__(self, api_key, auth_code):
         self.api_key = api_key
@@ -21,6 +20,8 @@ class Betfair:
             json={"jsonrpc": "2.0", "method": "AccountAPING/v1.0.getAccountFunds", "params": {}, "id": 1}
         )
         if response.status_code != 200 or 'error' in response.json():
+            print(f"Status code: {response.status_code}")
+            print(f"Response: {response.text}")
             raise Exception("Failed to connect to Betfair. Please check your API key and authentication code.")
 
     def account_balance(self):
@@ -31,80 +32,41 @@ class Betfair:
         result = response.json().get('result', {})
         return result.get('availableToBetBalance', 0)  
 
-    
     def list_event_types(self):
         endpoint = "https://api.betfair.com/exchange/betting/rest/v1.0/"
         header = {
-            'X-Application': self.betfair_api_key,
-            'X-Authentication': self.betfair_auth_code,
-            'content-type': 'application/json'
+            'X-Application': self.api_key,
+            'X-Authentication': self.auth_code,
+            'Content-Type': 'application/json'
         }
         json_req = '{"filter": {}}'
         url = endpoint + "listEventTypes/"
-        response = requests.post(url, data=json_req, headers=header)
+        response = self.session.post(url, data=json_req, headers=header)
         
-        # Check if the API call was successful
         if response.status_code == 200:
-            # Extract 'id' and 'name' from 'eventType' for each entry in the JSON response
             json_data = response.json()
             data = [{'id': event['eventType']['id'], 'name': event['eventType']['name']} for event in json_data]
-            
-            # Create a DataFrame
             df = pd.DataFrame(data)
             return df
         else:
-            print(f"Failed to retrieve data. Status code: {response.status_code}")
-            return pd.DataFrame()  # Return an empty DataFrame on failure
-        
-    '''def account_balance(self):
-        account_balance_url = 'https://api.betfair.com/exchange/account/json-rpc/v1'
+            logging.error(f"Failed to retrieve data. Status code: {response.status_code}")
+            return pd.DataFrame()
 
-        headers = {
-            'X-Application': self.betfair_api_key,
-            'X-Authentication': self.betfair_auth_code,
-            'Content-Type': 'application/json',
-        }
-
-        payload = {
-            "jsonrpc": "2.0",
-            "method": "AccountAPING/v1.0/getAccountFunds",
-            "params": {},
-            "id": 1
-        }
-
-        try:
-            response = requests.post(account_balance_url, json=payload, headers=headers)
-
-            if response.status_code == 200:
-                balance = response.json()['result']['availableToBetBalance']
-                return balance
-            else:
-                logging.error(f"Failed to retrieve account balance. Status code: {response.status_code}")
-                return None  # Return None to indicate failure
-
-        except requests.RequestException as e:
-            logging.exception(f"Request Exception occurred: {e}")
-            return None  # Return None to indicate exception/error'''
-        
     def list_market_horse(self, start_time, end_time):
-        api_url = 'https://api.betfair.com/betting/json-rpc/v1'  # Adjust the API endpoint as needed
-
-        # Construct the request headers with authentication
+        api_url = 'https://api.betfair.com/betting/json-rpc/v1'
         headers = {
-            'X-Application': self.betfair_api_key,
-            'X-Authentication': self.betfair_auth_code,
-            'Content-Type': 'application/json',
+            'X-Application': self.api_key,
+            'X-Authentication': self.auth_code,
+            'Content-Type': 'application/json'
         }
-
-        # Construct the JSON payload
         payload = {
             "jsonrpc": "2.0",
             "method": "SportsAPING/v1.0/listMarketCatalogue",
             "params": {
                 "filter": {
                     "eventTypeIds": ["7"],
-                    "marketCountries" :["GB"], 
-                    "marketTypeCodes": ["WIN"],  # can add "PLACE";  ["WIN", "PLACE"]
+                    "marketCountries": ["GB"], 
+                    "marketTypeCodes": ["WIN"], 
                     "marketStartTime": {
                         "from": start_time,
                         "to": end_time
@@ -123,53 +85,36 @@ class Betfair:
             "id": 1
         }
 
-        # Send the API request
-        response = requests.post(api_url, json=payload, headers=headers)
-
-        # Parse JSON response and create a DataFrame
+        response = self.session.post(api_url, json=payload, headers=headers)
         if response.status_code == 200:
             response_data = response.json()
-            
             if 'result' in response_data:
                 market_data = response_data['result']
-                
-                # Convert JSON to DataFrame
                 df = pd.json_normalize(market_data)
-
-                # Explode 'runners' column
                 if 'runners' in df.columns:
                     df_exploded = df.explode('runners')
                     df_normalized = pd.json_normalize(df_exploded['runners'])
-                    
-                    # Merge DataFrames on index
                     result_df = pd.concat([df_exploded.drop(columns='runners').reset_index(drop=True), df_normalized.reset_index(drop=True)], axis=1)
-                
-                    # Save DataFrame to CSV (Optional)
-                    result_df.to_csv('test1.csv', index=False)  # Saving the DataFrame to test1.csv
-
+                    result_df.to_csv('test1.csv', index=False)
                     return result_df
                 else:
-                    print("No 'runners' column found in the DataFrame.")
+                    logging.warning("No 'runners' column found in the DataFrame.")
                     return None
             else:
-                print("No 'result' key found in the response JSON.")
+                logging.error("No 'result' key found in the response JSON.")
                 return None
         else:
-            print(f"Request failed with status code: {response.status_code}")
-            print(response.text)  # Display the error message if any
+            logging.error(f"Request failed with status code: {response.status_code}")
+            logging.error(response.text)
             return None
-        
+
     def get_market_price_data(self, market_id):
-        api_url = 'https://api.betfair.com/betting/json-rpc/v1'  # Adjust the API endpoint as needed
-
-        # Construct the request headers with authentication
+        api_url = 'https://api.betfair.com/betting/json-rpc/v1'
         headers = {
-            'X-Application': self.betfair_api_key,
-            'X-Authentication': self.betfair_auth_code,
-            'Content-Type': 'application/json',
+            'X-Application': self.api_key,
+            'X-Authentication': self.auth_code,
+            'Content-Type': 'application/json'
         }
-
-        # Construct the request payload for price data
         price_payload = {
             "jsonrpc": "2.0",
             "method": "SportsAPING/v1.0/listMarketBook",
@@ -182,13 +127,9 @@ class Betfair:
             "id": 1
         }
 
-        # Send the API request for price data
-        response = requests.post(api_url, json=price_payload, headers=headers)
-
+        response = self.session.post(api_url, json=price_payload, headers=headers)
         if response.status_code == 200:
             price_data = response.json().get('result')
-
-            # Process the price data and extract the first "available to back" data for each runner
             if price_data:
                 extracted_data = []
                 for runner in price_data[0].get('runners', []):
@@ -200,54 +141,18 @@ class Betfair:
                             "marketId": market_id,
                             "selectionId": runner.get('selectionId'),
                             "price": first_entry.get('price'),
-                            "size": first_entry.get('size'),
-                            # Add more fields as needed
+                            "size": first_entry.get('size')
                         })
-
                 return extracted_data
             else:
-                print(f"No price data available for market {market_id}")
+                logging.warning(f"No price data available for market {market_id}")
                 return None
         else:
-            print(f"Failed to fetch price data for market {market_id}")
+            logging.error(f"Failed to fetch price data for market {market_id}")
             return None
-        
+
     def join_market_and_price(self, start_time, end_time):
         market_data = self.list_market_horse(start_time, end_time)
-
         if market_data is not None and not market_data.empty:
             unique_market_ids = market_data['marketId'].unique().tolist()
-
-            if unique_market_ids:
-                combined_data = []
-
-                for market_id in unique_market_ids:
-                    price_data = self.get_market_price_data(market_id)
-
-                    if price_data is not None:
-                        merged_data = pd.merge(
-                            market_data[market_data['marketId'] == market_id],
-                            pd.DataFrame(price_data),
-                            on = ['marketId', 'selectionId'],
-                            how = 'inner'
-                        )
-
-                        combined_data.append(merged_data)
-
-                if combined_data:
-                    result_df = pd.concat(combined_data, ignore_index=True)
-
-                    # Define columns list with unique column names
-                    columns = ['marketId', 'marketName', 'marketStartTime', 'eventType.id',
-                            'eventType.name', 'event.venue', 'selectionId', 'handicap', 'metadata.FORECASTPRICE_DENOMINATOR', 'metadata.WEIGHT_VALUE',
-                            'metadata.OFFICIAL_RATING']
-
-                    # Select specific columns from the concatenated DataFrame
-                    result_df = result_df[columns]
-
-                    # Save the DataFrame to a CSV file
-                    result_df.to_csv('market_and_price.csv', index=False)
-
-                    return result_df
-                
-        return None
+           

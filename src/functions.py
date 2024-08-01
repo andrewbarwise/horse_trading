@@ -46,4 +46,17 @@ def get_best_model():
     best_model_uri = f'runs:/{best_run.run_id}/mlruns'
     return best_model_uri
 
+def profit_calculation(test_data_df):
+    # Filter rows where model_preds == 1
+    bets = test_data_df[test_data_df['model_preds'] == 1].copy()
 
+    # Calculate returns
+    bets['Return'] = bets.apply(
+        lambda row: (row['SP Odds Decimal1'] - 1) if row['Won (1=Won, 0=Lost)'] == 1 else -1,
+        axis=1
+    )
+
+    # Total return
+    total_return = bets['Return'].sum()
+
+    print(f"Total return from betting £1 on each prediction where model_preds == 1: £{total_return:.2f}")

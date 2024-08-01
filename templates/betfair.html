@@ -5,10 +5,15 @@
 {% block content %}
 <h1>Betfair API Connection</h1>
 <form action="{{ url_for('betfair_check') }}" method="post">
+    <label for="username">Betfair Username:</label><br>
+    <input type="text" id="username" name="username" required><br><br>
+
+    <label for="password">Betfair Password:</label><br>
+    <input type="text" id="password" name="password" required><br><br>
+
     <label for="api_key">Betfair API Key:</label><br>
     <input type="text" id="api_key" name="api_key" required><br><br>
-    <label for="auth_code">Betfair Auth Code:</label><br>
-    <input type="text" id="auth_code" name="auth_code" required><br><br>
+
     <input type="submit" value="Check Connection">
 </form>
 

@@ -1,158 +1,133 @@
-import requests
+import betfairlightweight
 import pandas as pd
 import logging
 
 class Betfair:
-    def __init__(self, api_key, auth_code):
-        self.api_key = api_key
-        self.auth_code = auth_code
-        self.base_url = "https://api.betfair.com/exchange/account/json-rpc/v1"
-        self.session = requests.Session()
-        self.session.headers.update({
-            'X-Application': self.api_key,
-            'X-Authentication': self.auth_code,
-            'Content-Type': 'application/json'
-        })
-
+    def __init__(self, username, password, app_key):
+        self.username = username
+        self.password = password
+        self.app_key = app_key
+        self.client = betfairlightweight.APIClient(username, password, app_key=app_key)
+    
     def check_connection(self):
-        response = self.session.post(
-            self.base_url,
-            json={"jsonrpc": "2.0", "method": "AccountAPING/v1.0.getAccountFunds", "params": {}, "id": 1}
-        )
-        if response.status_code != 200 or 'error' in response.json():
-            print(f"Status code: {response.status_code}")
-            print(f"Response: {response.text}")
-            raise Exception("Failed to connect to Betfair. Please check your API key and authentication code.")
+        try:
+            self.client.login()
+            if not self.client.session_token:
+                raise Exception("Failed to obtain session token. Please check your credentials and app key.")
+        except Exception as e:
+            raise Exception(f"Error during Betfair connection: {str(e)}")
 
     def account_balance(self):
-        response = self.session.post(
-            self.base_url,
-            json={"jsonrpc": "2.0", "method": "AccountAPING/v1.0.getAccountFunds", "params": {}, "id": 1}
-        )
-        result = response.json().get('result', {})
-        return result.get('availableToBetBalance', 0)  
-
-    def list_event_types(self):
-        endpoint = "https://api.betfair.com/exchange/betting/rest/v1.0/"
-        header = {
-            'X-Application': self.api_key,
-            'X-Authentication': self.auth_code,
-            'Content-Type': 'application/json'
-        }
-        json_req = '{"filter": {}}'
-        url = endpoint + "listEventTypes/"
-        response = self.session.post(url, data=json_req, headers=header)
+        try:
+            account_funds = self.client.account_funds()
+            return account_funds.available_to_bet_balance
         
-        if response.status_code == 200:
-            json_data = response.json()
-            data = [{'id': event['eventType']['id'], 'name': event['eventType']['name']} for event in json_data]
-            df = pd.DataFrame(data)
-            return df
-        else:
-            logging.error(f"Failed to retrieve data. Status code: {response.status_code}")
-            return pd.DataFrame()
-
+        except Exception as e:
+            logging.error(f'Failed to retrieve account balance: {e}')
+            return 0
+        
     def list_market_horse(self, start_time, end_time):
-        api_url = 'https://api.betfair.com/betting/json-rpc/v1'
-        headers = {
-            'X-Application': self.api_key,
-            'X-Authentication': self.auth_code,
-            'Content-Type': 'application/json'
-        }
-        payload = {
-            "jsonrpc": "2.0",
-            "method": "SportsAPING/v1.0/listMarketCatalogue",
-            "params": {
-                "filter": {
-                    "eventTypeIds": ["7"],
-                    "marketCountries": ["GB"], 
-                    "marketTypeCodes": ["WIN"], 
-                    "marketStartTime": {
-                        "from": start_time,
-                        "to": end_time
-                    }
-                },
-                "maxResults": "200",
-                "marketProjection": [
-                    "MARKET_START_TIME",
-                    "RUNNER_METADATA",
-                    "RUNNER_DESCRIPTION",
-                    "EVENT_TYPE",
-                    "EVENT",
-                    "COMPETITION"
-                ]
-            },
-            "id": 1
-        }
-
-        response = self.session.post(api_url, json=payload, headers=headers)
-        if response.status_code == 200:
-            response_data = response.json()
-            if 'result' in response_data:
-                market_data = response_data['result']
-                df = pd.json_normalize(market_data)
-                if 'runners' in df.columns:
-                    df_exploded = df.explode('runners')
-                    df_normalized = pd.json_normalize(df_exploded['runners'])
-                    result_df = pd.concat([df_exploded.drop(columns='runners').reset_index(drop=True), df_normalized.reset_index(drop=True)], axis=1)
-                    result_df.to_csv('test1.csv', index=False)
-                    return result_df
-                else:
-                    logging.warning("No 'runners' column found in the DataFrame.")
-                    return None
-            else:
-                logging.error("No 'result' key found in the response JSON.")
-                return None
-        else:
-            logging.error(f"Request failed with status code: {response.status_code}")
-            logging.error(response.text)
-            return None
-
-    def get_market_price_data(self, market_id):
-        api_url = 'https://api.betfair.com/betting/json-rpc/v1'
-        headers = {
-            'X-Application': self.api_key,
-            'X-Authentication': self.auth_code,
-            'Content-Type': 'application/json'
-        }
-        price_payload = {
-            "jsonrpc": "2.0",
-            "method": "SportsAPING/v1.0/listMarketBook",
-            "params": {
-                "marketIds": [market_id],
-                "priceProjection": {
-                    "priceData": ["EX_BEST_OFFERS"]
+        try:
+            market_filter = betfairlightweight.filters.market_filter(
+                event_type_ids = ['7'],
+                market_countries = ['GB'],
+                market_type_codes = ['WIN'],
+                market_start_time = {
+                    'from' : start_time,
+                    'to' : end_time
                 }
-            },
-            "id": 1
-        }
+            )
 
-        response = self.session.post(api_url, json=price_payload, headers=headers)
-        if response.status_code == 200:
-            price_data = response.json().get('result')
+            market_catalogues = self.client.betting.list_market_catalogue(
+                filter = market_filter,
+                market_projection = [
+                    'MARKET_START_TIME',
+                    'RUNNER_METADATA',
+                    'RUNNER_DESCRIPTION',
+                    'EVENT_TYPE',
+                    'EVENT',
+                    'COMPETITION'
+                ],
+                max_results = 200
+            )
+
+            data = []
+
+            for market in market_catalogues:
+                for runner in market.runners:
+                    data.append({
+                        'marketId' : market.market_id,
+                        'marketName' : market.market_name,
+                        'event' : market.event.name,
+                        'runnerid' : runner.selection_id,
+                        'runnerName' : runner.runner_name,
+                        'marketStartTime' : market.market_start_time
+                    })
+
+            df = pd.DataFrame(data)
+            df.to_csv('test1.csv', index = False)
+
+        except Exception as e:
+            logging.error(f'Failed to list market: {e}')
+            return pd.DataFrame()
+        
+    def get_market_price_data(self, market_id):
+        try:
+            price_data = self.client.betting.list_market_book(
+                market_ids = [market_id],
+                price_projection = betfairlightweight.filters.price_projection(price_data=['EX_BEST_OFFERS'])
+            )
             if price_data:
+                market_book = price_data[0]
                 extracted_data = []
-                for runner in price_data[0].get('runners', []):
-                    ex_data = runner.get('ex', {})
-                    available_to_back = ex_data.get('availableToBack', [])
-                    if available_to_back:
-                        first_entry = available_to_back[0]
-                        extracted_data.append({
-                            "marketId": market_id,
-                            "selectionId": runner.get('selectionId'),
-                            "price": first_entry.get('price'),
-                            "size": first_entry.get('size')
-                        })
-                return extracted_data
-            else:
-                logging.warning(f"No price data available for market {market_id}")
-                return None
-        else:
-            logging.error(f"Failed to fetch price data for market {market_id}")
-            return None
 
+                for runner in market_book.runners:
+                    if runner.ex.available_to_back:
+                        first_back_offer = runner.ex.available_to_back[0]
+                    else:
+                        first_back_offer = {'price' : None, 'size' : None}
+
+                    if runner.ex.available_to_lay:
+                        first_lay_offer = runner.ex.available_to_lay[0]
+                    else:
+                        first_lay_offer = {'price' : None, 'size' : None}
+
+                    extracted_data.append({
+                        'marketId' : market_id,
+                        'selectionId' : runner.selection_id,
+                        'backPrice' : first_back_offer['price'],
+                        'backSize' : first_back_offer['size'],
+                        'layPrice' : first_lay_offer['price'],
+                        'laySize' : first_lay_offer['size']
+                    })
+                return extracted_data
+            
+            else:
+                logging.warning(f'No price data available for market {market_id}')
+                return None
+            
+        except Exception as e:
+            logging.error(f'Failed to get market price data: {e}')
+            return None
+        
     def join_market_and_price(self, start_time, end_time):
         market_data = self.list_market_horse(start_time, end_time)
+
         if market_data is not None and not market_data.empty:
             unique_market_ids = market_data['marketId'].unique().tolist()
-           
+
+            all_price_data = []
+            for market_id in unique_market_ids:
+                price_data = self.get_market_price_data(market_id)
+
+                if price_data:
+                    all_price_data.extend(price_data)
+
+            if all_price_data:
+                price_df = pd.DataFrame(all_price_data)
+                combined_df = pd.merge(market_data, price_df, on = 'marketId')
+                return combined_df
+            
+        else:
+            logging.warning('No market data available.')
+            return None

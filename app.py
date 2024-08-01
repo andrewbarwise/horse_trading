@@ -97,14 +97,16 @@ def betfair():
 @app.route('/betfair/check', methods=['POST'])
 @login_required
 def betfair_check():
-    api_key = request.form.get('api_key')
-    auth_code = request.form.get('auth_code')
-    betfair = Betfair(api_key, auth_code)
+    username = request.form.get('username')
+    password = request.form.get('password')
+    app_key = request.form.get('app_key')
 
     try:
+        betfair = Betfair(username, password, app_key)
         betfair.check_connection()
-        session['api_key'] = api_key
-        session['auth_code'] = auth_code
+        session['username'] = username
+        session['password'] = password
+        session['app_key'] = app_key
         flash('Connection to Betfair Successful')
     except Exception as e:
         flash(f'Connection failed: {e}')
@@ -120,8 +122,8 @@ def login():
         if user and check_password_hash(user.password, password):
             login_user(user)
 
-            if 'api_key' in session and 'auth_key' in session:
-                betfair = Betfair(session['api_key'], session['auth_code'])
+            if 'username' in session and 'password' in session and 'app_key' in session:
+                betfair = Betfair(session['username'], session['password'], session['app_key'])
                 balance = betfair.account_balance()
                 session['balance'] = balance
 
@@ -135,6 +137,9 @@ def login():
 def logout():
     logout_user()
     session.pop('balance', None) # clear the balance from the session
+    session.pop('username', None)
+    session.pop('password', None)
+    session.pop('app_key', None)
     return redirect(url_for('landing'))
 
 @app.route('/predict_page')

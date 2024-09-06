@@ -46,17 +46,33 @@ def get_best_model():
     best_model_uri = f'runs:/{best_run.run_id}/mlruns'
     return best_model_uri
 
-def profit_calculation(test_data_df):
+def profit_calculation(test_data_df, stake = 1):
     # Filter rows where model_preds == 1
     bets = test_data_df[test_data_df['model_preds'] == 1].copy()
 
     # Calculate returns
     bets['Return'] = bets.apply(
-        lambda row: (row['SP Odds Decimal1'] - 1) if row['Won (1=Won, 0=Lost)'] == 1 else -1,
+        lambda row: (row['SP Odds Decimal1'] - 1) * stake if row['Won (1=Won, 0=Lost)'] == 1 else -1,
         axis=1
     )
 
     # Total return
     total_return = bets['Return'].sum()
 
-    print(f"Total return from betting £1 on each prediction where model_preds == 1: £{total_return:.2f}")
+    # total number of bets
+    total_bets = len(bets)
+
+    # Calculate accuracy: Percentage of correct predictions where the model predicted 1 and won
+    correct_predictions = bets[bets['Won (1=Won, 0=Lost)'] == 1].shape[0]
+    
+    if total_bets > 0:
+        accuracy = (correct_predictions / total_bets) * 100  # Accuracy in percentage
+        return_per_pound = total_return / (total_bets * stake)
+    else:
+        accuracy = 0
+        return_per_pound = 0
+
+    print(f"Total number of bets: {total_bets}")
+    print(f"Total return from betting £{stake:.2f} on each prediction where model_preds == 1: £{total_return:.2f}")
+    print(f"Return per pound invested: £{return_per_pound:.2f}")
+    print(f"Model accuracy: {accuracy:.2f}%")

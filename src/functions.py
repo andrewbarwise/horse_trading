@@ -46,9 +46,19 @@ def get_best_model():
     best_model_uri = f'runs:/{best_run.run_id}/mlruns'
     return best_model_uri
 
-def profit_calculation(test_data_df, stake = 1):
+def profit_calculation(df, stake = 1):
+    """
+    Calculate ROI, total returns from the model predictions.
+
+    Args:
+        df (pd.Dataframe): A dataframe that has a column holding the model predictions
+        stake (int): The amount staked for each bet
+
+    Returns:
+        print() 
+    """
     # Filter rows where model_preds == 1
-    bets = test_data_df[test_data_df['model_preds'] == 1].copy()
+    bets = df[df['model_preds'] == 1].copy()
 
     # Calculate returns
     bets['Return'] = bets.apply(
@@ -64,7 +74,7 @@ def profit_calculation(test_data_df, stake = 1):
 
     # Calculate accuracy: Percentage of correct predictions where the model predicted 1 and won
     correct_predictions = bets[bets['Won (1=Won, 0=Lost)'] == 1].shape[0]
-    
+
     if total_bets > 0:
         accuracy = (correct_predictions / total_bets) * 100  # Accuracy in percentage
         return_per_pound = total_return / (total_bets * stake)
@@ -76,3 +86,35 @@ def profit_calculation(test_data_df, stake = 1):
     print(f"Total return from betting £{stake:.2f} on each prediction where model_preds == 1: £{total_return:.2f}")
     print(f"Return per pound invested: £{return_per_pound:.2f}")
     print(f"Model accuracy: {accuracy:.2f}%")
+
+def calculate_lay_stakes_multiple_runners(accepted_bets, other_horse_odds, profit_margin=0.05):
+    """
+    Calculate lay stakes for remaining horses to balance the book
+    when accepting multiple bets.
+
+    Args:
+        accepted_bets (list of tuples): a list of tuples where each tuple contains (stake, odds)
+            for accepted bets.
+        other_horse_odds (list): list of decimal odds for the remaining horses
+        profit_margin(float): desired profit margin ( default equals 5%)
+
+    Returns:
+        dict: a dictionary of lay stakes for each remaining horse
+
+    Example usage:
+        accepted_bets = [(100, 3.0), (150, 4.0)]  # (stake, odds) for Horse 1 and Horse 2
+        other_horses_odds = [7.0, 9.0]  # Odds for Horse 3 and Horse 4
+
+        lay_stakes = calculate_lay_stakes_multiple_accepted(accepted_bets, other_horses_odds)
+        print(lay_stakes)
+    """
+    # calculate total liability from the accepted bets
+    total_liability = sum(stake * (odds - 1) for stake, odds in accepted_bets)
+
+    # calculate lay stakes for remaining horses
+    lay_stakes = {}
+    for i, odds in enumerate(other_horse_odds, start = len(accepted_bets) + 1):
+        lay_stake = (total_liability * (1 + profit_margin)) / (odds - 1)
+        lay_stakes[f'Horse {i}'] = round(lay_stake, 2)
+
+    return lay_stakes

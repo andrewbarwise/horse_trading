@@ -118,3 +118,36 @@ def calculate_lay_stakes_multiple_runners(accepted_bets, other_horse_odds, profi
         lay_stakes[f'Horse {i}'] = round(lay_stake, 2)
 
     return lay_stakes
+
+def fetch_race_results(market_ids, trading):
+    try:
+        data = trading.race_card.get_race_result(market_ids=market_ids)
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        data = []
+
+    # Process and display the data
+    flat_data = []
+
+    for race in data:
+        for runner in race.get('runners', []):
+            for selection in runner.get('selections', []):
+                if selection['marketType'] == 'WIN' and 'bsp' in selection:
+                    flat_data.append({
+                        'race_id': race.get('raceId'),
+                        'country_code': race.get('course', {}).get('countryCode'),
+                        'race_title': race.get('raceTitle'),
+                        'race_class': race.get('raceClassification', {}).get('classification'),
+                        'distance': race.get('distance'),
+                        'course_type': race.get('course', {}).get('courseType'),
+                        'surface_type': race.get('course', {}).get('surfaceType'),
+                        'market_id': selection.get('marketId'),
+                        'horse_id': runner.get('horseId'),
+                        'saddle_cloth': runner.get('saddleCloth'),
+                        'isNonRunner': runner.get('isNonRunner'),
+                        'position': runner.get('position'),
+                        'selection_id': selection.get('selectionId'),
+                        'bsp': selection.get('bsp')
+                    })
+
+    return pd.DataFrame(flat_data)

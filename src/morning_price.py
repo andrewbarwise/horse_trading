@@ -122,7 +122,7 @@ class MorningPrice:
                         'total_matched': total_matched,
                         'selection_id': runner_id,
                         'status': runner_status,
-                        'morning_price': last_price_traded,
+                        'last_price_traded': last_price_traded,
                     })
 
 
@@ -130,7 +130,7 @@ class MorningPrice:
         # Convert the list of dictionaries into a DataFrame
         df2 = pd.DataFrame(data)
 
-        df2 = df2[['market_id', 'selection_id', 'status', 'morning_price', 'total_matched']]
+        df2 = df2[['market_id', 'selection_id', 'status', 'last_price_traded', 'total_matched']]
         return df2
     
     def join(self, df1, df2):
@@ -138,6 +138,10 @@ class MorningPrice:
         df3 = df1.merge(df2, on = ['market_id', 'selection_id'], how = 'left')
 
         df3['market_id'] = df3['market_id'].astype(str)
+
+        df3['market_start_time'] = df3['market_start_time'].dt.tz_localize('UTC')
+
+        # df3['market_start_time'] = df3['market_start_time'].dt.tz_convert('Europe/London')
 
 
         current_date = datetime.now().strftime('%Y-%m-%d')

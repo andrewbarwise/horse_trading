@@ -3,10 +3,11 @@ import os
 import pandas as pd
 
 class DatabaseConnector:
-    def __init__(self, database_name):
+    def __init__(self, database_name, password):
         self.host = os.getenv('DB_HOST')
         self.user = os.getenv('DB_USER')
-        self.password = os.getenv('DB_PASSWORD')
+        #self.password = os.getenv('DB_PASSWORD')
+        self.password = password
         self.database = database_name
         self.connection = None
 

@@ -81,6 +81,7 @@ class DataCleaning:
         scaler = MinMaxScaler()
         df_normalized = df.copy()
         df_normalized[column_names] = scaler.fit_transform(df[column_names])
+
         return df_normalized
     
     @staticmethod

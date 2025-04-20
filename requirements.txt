@@ -15,7 +15,7 @@ comm==0.1.4
 contourpy==1.2.0
 cycler==0.12.1
 databricks-cli==0.18.0
-deap @ file:///Users/runner/miniforge3/conda-bld/deap_1736455531596/work
+deap==1.4.2
 debugpy==1.8.0
 decorator==5.1.1
 docker==6.1.3

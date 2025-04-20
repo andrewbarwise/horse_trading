@@ -25,7 +25,7 @@ UPLOAD_FOLDER = 'uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Construct the absolute path for the model
-model_path = os.path.join(os.path.dirname(__file__), 'models', 'base_model.pkl')
+model_path = os.path.join(os.path.dirname(__file__), 'models', 'logistic_regression_model.pkl')
 
 # Debugging statement to print the model path
 print(f"Model path: {model_path}")

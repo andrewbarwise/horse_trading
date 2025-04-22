@@ -33,15 +33,17 @@ jobs:
         username: ${{ secrets.DOCKER_HUB_USERNAME }}
         password: ${{ secrets.DOCKER_HUB_PASSWORD }}
 
-    - name: Build and push to Docker Hub
+    - name: Build and push to Docker Hub (and load for tagging)
       uses: docker/build-push-action@v6
       with:
         context: .
-        platforms: linux/amd64,linux/arm64
+        platforms: linux/amd64
         push: true
+        load: true  # <- This makes the image available locally for tagging
         tags: |
           andrewbarwise/app:latest
           andrewbarwise/app:1.0.0
+
 
     - name: Install Heroku CLI
       run: |

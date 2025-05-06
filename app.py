@@ -86,16 +86,17 @@ def inject_balance():
 @app.route('/')
 def landing():
     if current_user.is_authenticated:
-        return redirect(url_for('predict_page'))
+        #return redirect(url_for('predict_page'))
+        return render_template('landing.html')
     return render_template('landing.html')
 
 @app.route('/betfair')
-@login_required
+#@login_required
 def betfair():
     return render_template('betfair.html')
 
 @app.route('/betfair/check', methods=['POST'])
-@login_required
+#@login_required
 def betfair_check():
     username = request.form.get('username')
     password = request.form.get('password')
@@ -133,7 +134,7 @@ def login():
     return render_template('landing.html')
 
 @app.route('/logout', methods=['POST'])
-@login_required
+#@login_required
 def logout():
     logout_user()
     session.pop('balance', None) # clear the balance from the session
@@ -143,63 +144,49 @@ def logout():
     return redirect(url_for('landing'))
 
 @app.route('/predict_page')
-@login_required
+#@login_required
 def predict_page():
+    model_dir = 'models'
+    models = [f for f in os.listdir(model_dir) if f.endswith('.pkl')]
     balance = session.get('balance')
-    return render_template('index.html', balance=balance, races=[], race_data={}, selected_race=None)
+    return render_template('index.html', models=models, selected_model=None, balance=balance, races=[], race_data={}, selected_race=None)
 
 @app.route('/predict', methods=['POST'])
-@login_required
+#@login_required
 def predict():
-    if 'file' not in request.files:
-        return "No file part"
-    
+    model_name = request.form.get('model_name')  # <-- this is new
     file = request.files['file']
-    if file.filename == '':
+
+    if not file or file.filename == '':
         return "No selected file"
-    
-    if file:
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
-        
-        # Debugging statement to print the file path
-        print(f"Uploaded file path: {filepath}")
 
-        file.save(filepath)
-        
-        # Read the CSV file into a DataFrame
-        data = pd.read_csv(filepath)
+    filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+    file.save(filepath)
 
-        # Debugging statement to print the data
-        print(f"Data from CSV:\n{data.head()}")
+    # Load the model
+    model_path = os.path.join('models', model_name)
+    with open(model_path, 'rb') as f:
+        model = pickle.load(f)
 
-        # Extract unique races
-        races = data['Race Time'].unique().tolist()
+    # Read and process the CSV
+    data = pd.read_csv(filepath)
+    races = data['Race Time'].unique().tolist()
 
-        # Normalize columns using DataCleaning module
-        data1 = DataCleaning.normalize_columns(data, ['SP Odds Decimal', 'weight', 
-           'Proform Speed Rating', 'Won P/L Before', 'evening_morning_price'])
-        
-        # Create a dictionary to store DataFrame HTML for each race
-        race_data = {}
+    data1 = DataCleaning.normalize_columns(data, ['SP Odds Decimal', 'weight', 
+       'Proform Speed Rating', 'Won P/L Before', 'evening_morning_price'])
 
-        for race in races:
-            race_df = data1[data1['Race Time'] == race].copy()
-            
-            # Drop columns not needed for prediction
-            features = race_df[['SP Odds Decimal', 'weight', 
-                    'Proform Speed Rating', 'Won P/L Before', 'evening_morning_price']].values
-            
-            # Make predictions
-            predictions = model.predict(features)
-            
-            # Add predictions to the DataFrame
-            race_df['Predictions'] = predictions
-            race_data[race] = race_df.to_html(classes='data', header="true", index=False)
-        
-        # Ensure selected_race is valid
-        selected_race = races[0] if races else None
-        balance = session.get('balance')
-        return render_template('index.html', balance = balance, races=races, race_data=race_data, selected_race=selected_race)
+    race_data = {}
+    for race in races:
+        race_df = data1[data1['Race Time'] == race].copy()
+        features = race_df[['SP Odds Decimal', 'weight', 
+                            'Proform Speed Rating', 'Won P/L Before', 'evening_morning_price']].values
+        predictions = model.predict(features)
+        race_df['Predictions'] = predictions
+        race_data[race] = race_df.to_html(classes='data', header="true", index=False)
+
+    selected_race = races[0] if races else None
+    models = [f for f in os.listdir('models') if f.endswith('.pkl')]
+    return render_template('index.html', models=models, selected_model=model_name, races=races, race_data=race_data, selected_race=selected_race)
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

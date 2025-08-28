@@ -1,6 +1,7 @@
 
-.csv
+turf.csv
 .xls
+.csv
 # MLflow related files and directories
 mlruns/
 mlruns.db

@@ -62,7 +62,7 @@ def profit_calculation(df, stake = 1):
 
     # Calculate returns
     bets['Return'] = bets.apply(
-        lambda row: (row['SP Odds Decimal1'] - 1) * stake if row['Won (1=Won, 0=Lost)'] == 1 else -1,
+        lambda row: (row['BF Decimal SP1'] - 1) * stake if row['Won (1=Won, 0=Lost)'] == 1 else -1,
         axis=1
     )
 

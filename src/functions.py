@@ -151,3 +151,25 @@ def fetch_race_results(market_ids, trading):
                     })
 
     return pd.DataFrame(flat_data)
+
+def monte_carlo_sim(df_race, n_sims = 10000, seed = 42):
+    """
+    df_race: df one race, each row represents a horse
+    Returns: df with simulated win prob's and expected value of SP bets
+    
+    """
+    rng = np.random.default_rng(seed)
+    n_horses = len(df_race)
+    win_counts = np.zeros(n_horses)
+
+    for _ in range(n_sims):
+        winner = rng.choice(
+            df_race.index,
+            p=df_race['pred_prob']/df_race['pred_prob'].sum()
+        )
+        win_counts[winner] += 1
+
+    df_out = df_race.copy()
+    df_out['mc_win_prob'] = win_counts / n_sims
+    df_out['ev'] = df_out['BF Decimal SP1'] * df_out['mc_win_prob'] - 1
+    return df_out
